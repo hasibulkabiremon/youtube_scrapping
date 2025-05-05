@@ -6,10 +6,9 @@ import datetime
 import hashlib
 from pathlib import Path
 
-def download_video_info():
-    url = "https://youtu.be/TYRQAXNfDog?si=0UIsXawNNiVYs-xQ"
-    info_json_filename = "video_info.json"
-    comments_json_filename = "comments.json"
+def download_video_info(url):
+    info_json_filename = "post_data/video_info.json"
+    comments_json_filename = "post_data/comments.json"
     
     # Download thumbnail and video info with comments
     print(f"Extracting video info and comments from: {url}")
@@ -20,7 +19,7 @@ def download_video_info():
     ])
     
     # Find the info JSON file
-    video_id = url.split("=")[-1]
+    video_id = url.split('v=')[-1].split('&')[0] if 'v=' in url else url.split('/')[-1].split('?')[0]
     info_file = f"{video_id}.info.json"
     ss_file = f"{video_id}.webp"
 
@@ -161,25 +160,38 @@ def download_video_info():
     formatted_data["vitality_score"] = video_info.get("view_count", 0) // 1000  # Using view_count for vitality
     formatted_data["checksum"] = hashlib.md5(json.dumps(formatted_data["comments"]).encode()).hexdigest()
     
-    #rename the thumbnail file
+    # Create directories if they don't exist
+    Path("post_data/image").mkdir(parents=True, exist_ok=True)
+
+    # Save formatted JSON
+    output_file = f"post_data/{video_id}_formatted_data.json"
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(formatted_data, f, indent=3, ensure_ascii=False)
+
+    # Rename the thumbnail file
     if os.path.exists(ss_file):
-        new_ss_name = f"{video_id}" + "_ss.webp"
+        new_ss_name = f"post_data/image/{video_id}_ss.webp"
         os.rename(ss_file, new_ss_name)
         print("File renamed successfully!")
     else:
         print("Original file not found.")
 
+    # Move downloaded files to the correct directories
+    if os.path.exists(f"{video_id}.info.json"):
+        os.remove(f"{video_id}.info.json")
 
-    # Save formatted JSON
+    if os.path.exists(f"{video_id}.webp"):
+        os.remove(f"{video_id}.webp")
 
-
+    '''
     output_file = f"{video_id}" + "_formatted_data.json"
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(formatted_data, f, indent=3, ensure_ascii=False)
     
     print(f"Comments and video info extracted and saved to {output_file}")
     print(f"Total comments from metadata: {comment_count}")
-    print(f"Thumbnail saved")
+    print(f"Thumbnail saved")'''
 
 if __name__ == "__main__":
-    download_video_info() 
+    url = "https://www.youtube.com/live/DD3JlT_u0DM?si=16IJzQz6vVebcMZM"
+    download_video_info(url) 
