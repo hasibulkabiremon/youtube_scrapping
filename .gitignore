@@ -1,3 +1,4 @@
 *.json
 *.webp
 yt_env/
+post_data/
